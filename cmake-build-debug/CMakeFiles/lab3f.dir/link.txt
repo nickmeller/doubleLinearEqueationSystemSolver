@@ -1,0 +1,1 @@
+/usr/bin/cc -g   CMakeFiles/lab3f.dir/main.c.o  -o lab3f 
