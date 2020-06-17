@@ -1,8 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
+#define EPS 0.0000000001
 
 size_t number = -1;
+
+void swap(double *a, double *b) {
+    double t = *a;
+    *a = *b;
+    *b = *a;
+}
 
 double ** read(char * filename) {
     FILE * in = fopen(filename, "r");
@@ -50,8 +58,62 @@ void print_matrix(double ** matrix, int transpose, size_t size) {
 
 int gauss (double ** v, double * ans, size_t n) {
     int * where = malloc((n - 1) * sizeof(int));
+    int m = n - 1;
     memset(where, -1, n -1);
-    for (int i = 0, j = 0)
+    memset(ans, 0, n);
+    for (size_t col = 0, row = 0; col < m && row < n; ++col) {
+        size_t sel = row;
+        for (size_t i = row; i < n; i++) {
+            if (fabs(v[i][col] > fabs(v[sel][col]))) {
+                sel = i;
+            }
+        }
+        if (fabs(v[sel][col] < EPS))
+            continue;
+        for (size_t i = col; i <= m; i++) {
+            swap(&v[sel][i], &v[row][i]);
+        }
+        where[col] = row;
+        for (size_t i = 0; i < n; i++)
+            if (i != row) {
+                double c = v[i][col] / v[row][col];
+                for (size_t j = col; j <= m; j++)
+                    v[i][j] -= v[row][j] * c;
+            }
+    }
+    for (size_t i = 0; i < m; i++)
+        if (where[i] != -1)
+            ans[i] = v[where[i]][m] / v[where[i]][i];
+    for (size_t i = 0; i < n; i++) {
+        double sum = 0;
+        for (size_t j = 0; j < m; j++) {
+            sum += ans[j] * v[i][j];
+        }
+        if (fabs (sum - v[i][m]) > EPS)
+            return 0;
+    }
+
+    for (size_t i = 0; i < m; i++) {
+        if (where[i] == -1)
+            return -1;
+    }
+    return 1;
+}
+
+void write_result(char * filename, int mode, double * ans) {
+    FILE * out = fopen(filename, "w");
+    if (!out) {
+        fprintf(stderr, "Error while opening file %s", filename);
+        exit(EXIT_FAILURE);
+    }
+    if (mode <= 0) {
+        fprintf(out, (mode == -1 ? "Many solutions" : "No solutions"));
+    } else {
+        for (size_t i = 0; i < number; i++) {
+            fprintf(out, "%lf ", ans[i]);
+        }
+    }
+    fclose(out);
 }
 
 
@@ -62,9 +124,18 @@ int main(int argc, char ** argv) {
         exit(EXIT_FAILURE);
     }
     double ** matrix = read(argv[1]);
-    fprintf(stderr, "Reading successful\n");
+    //fprintf(stderr, "Reading successful\n");
     //print_matrix(matrix, 0, number);
-
-
-    return 0;
+    double * ans = malloc(number * sizeof(double));
+    int result = gauss(matrix, ans, number);
+//    for (size_t i = 0; i < number; i++) {
+//        fprintf(stderr, "%lf ", ans[i]);
+//    }
+    write_result(argv[2], result, ans);
+    free(ans);
+    for (size_t i = 0; i < number; i++) {
+        free(matrix[i]);
+    }
+    free(matrix);
+    exit(EXIT_SUCCESS);
 }
