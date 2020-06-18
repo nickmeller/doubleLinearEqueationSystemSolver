@@ -2,6 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <limits.h>
+#include <zconf.h>
+
 #define EPS 0.0000000001
 
 size_t number = -1;
@@ -12,7 +15,7 @@ void swap(double *a, double *b) {
     *b = *a;
 }
 
-double ** read(char * filename) {
+double ** read_matrix(char * filename) {
     FILE * in = fopen(filename, "r");
     if (!in) {
         fprintf(stderr, "Could not open file %s", filename);
@@ -20,7 +23,7 @@ double ** read(char * filename) {
     }
     number = 0;
     if (!fscanf(in, "%ld", &number)) {
-        fprintf(stderr, "Could not read from file %s", filename);
+        fprintf(stderr, "Could not read_matrix from file %s", filename);
         exit(EXIT_FAILURE);
     }
     double ** matrix = malloc((number + 1) * (number + 1) * sizeof(double*));
@@ -37,8 +40,8 @@ double ** read(char * filename) {
     }
     for (int i = 0; i < number + 1; i++) {
         for (int j = 0; j < number + 1; j++) {
-            if(!fscanf(in, "%lf", &matrix[j][i])) {
-                fprintf(stderr, "Could not read numbers from file %s", filename);
+            if(!fscanf(in, "%lf", &matrix[i][j])) {
+                fprintf(stderr, "Could not read_matrix numbers from file %s", filename);
                 exit(EXIT_FAILURE);
             }
         }
@@ -57,8 +60,8 @@ void print_matrix(double ** matrix, int transpose, size_t size) {
 }
 
 int gauss (double ** v, double * ans, size_t n) {
-    int * where = malloc((n - 1) * sizeof(int));
-    int m = n - 1;
+    ptrdiff_t * where = malloc((n - 1) * sizeof(int));
+    size_t m = n - 1;
     memset(where, -1, n -1);
     memset(ans, 0, n);
     for (size_t col = 0, row = 0; col < m && row < n; ++col) {
@@ -123,7 +126,7 @@ int main(int argc, char ** argv) {
         fprintf(stderr ,"Expected two arguments, found %d", argc - 1);
         exit(EXIT_FAILURE);
     }
-    double ** matrix = read(argv[1]);
+    double ** matrix = read_matrix(argv[1]);
     //fprintf(stderr, "Reading successful\n");
     //print_matrix(matrix, 0, number);
     double * ans = malloc(number * sizeof(double));

@@ -15,4 +15,8 @@ string.h
 -
 math.h
 -
+limits.h
+-
+zconf.h
+-
 
