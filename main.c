@@ -1,9 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <math.h>
-#include <limits.h>
-#include <zconf.h>
+#include <stddef.h>
 
 #define EPS 0.0000000001
 
@@ -22,7 +20,7 @@ double ** read_matrix(char * filename) {
         exit(EXIT_FAILURE);
     }
     number = 0;
-    if (!fscanf(in, "%ld", &number)) {
+    if (fscanf(in, "%ld", &number) == EOF) {
         fprintf(stderr, "Could not read matrix from file %s", filename);
         exit(EXIT_FAILURE);
     }
@@ -40,7 +38,7 @@ double ** read_matrix(char * filename) {
     }
     for (int i = 0; i < number; i++) {
         for (int j = 0; j < number + 1; j++) {
-            if(!fscanf(in, "%lf", &matrix[i][j])) {
+            if(fscanf(in, "%lf", &matrix[i][j]) == EOF) {
                 fprintf(stderr, "Could not read_matrix numbers from file %s", filename);
                 exit(EXIT_FAILURE);
             }
@@ -91,10 +89,6 @@ int gauss (double ** v, double * ans, size_t n) {
         ++row;
 
     }
-//    for (size_t i = 0; i < n; i++) {
-//        fprintf(stderr, "%ld ", where[i]);
-//    }
-//    fprintf(stderr, "\n");
     for (size_t i = 0; i < m; i++)
         if (where[i] != -1)
             ans[i] = v[where[i]][m] / v[where[i]][i];
@@ -138,13 +132,8 @@ int main(int argc, char ** argv) {
         exit(EXIT_FAILURE);
     }
     double ** matrix = read_matrix(argv[1]);
-    //fprintf(stderr, "Reading successful\n");
-//    print_matrix(matrix, number);
     double * ans = malloc(number * sizeof(double));
     int result = gauss(matrix, ans, number);
-//    for (size_t i = 0; i < number; i++) {
-//        fprintf(stderr, "%lf ", ans[i]);
-//    }
     write_result(argv[2], result, ans);
     free(ans);
     for (size_t i = 0; i < number; i++) {
