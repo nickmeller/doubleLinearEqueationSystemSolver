@@ -12,7 +12,7 @@ size_t number = -1;
 void swap(double *a, double *b) {
     double t = *a;
     *a = *b;
-    *b = *a;
+    *b = t;
 }
 
 double ** read_matrix(char * filename) {
@@ -23,22 +23,22 @@ double ** read_matrix(char * filename) {
     }
     number = 0;
     if (!fscanf(in, "%ld", &number)) {
-        fprintf(stderr, "Could not read_matrix from file %s", filename);
+        fprintf(stderr, "Could not read matrix from file %s", filename);
         exit(EXIT_FAILURE);
     }
-    double ** matrix = malloc((number + 1) * (number + 1) * sizeof(double*));
+    double ** matrix = malloc((number) * sizeof(double*));
     if (!matrix) {
         fprintf(stderr, "Could not allocate memory");
         exit(EXIT_FAILURE);
     }
-    for (int i = 0; i < number + 1; i++) {
+    for (int i = 0; i < number; i++) {
         matrix[i] = malloc((number + 1) * sizeof(double));
         if (!matrix[i]) {
             fprintf(stderr, "Could not allocate memory");
             exit(EXIT_FAILURE);
         }
     }
-    for (int i = 0; i < number + 1; i++) {
+    for (int i = 0; i < number; i++) {
         for (int j = 0; j < number + 1; j++) {
             if(!fscanf(in, "%lf", &matrix[i][j])) {
                 fprintf(stderr, "Could not read_matrix numbers from file %s", filename);
@@ -50,20 +50,22 @@ double ** read_matrix(char * filename) {
     return matrix;
 }
 
-void print_matrix(double ** matrix, int transpose, size_t size) {
+void print_matrix(double ** matrix, size_t size) {
     for (size_t i = 0; i < size; i++) {
-        for (size_t j = 0; j < size; j++) {
-            fprintf(stderr, "%lf ", (transpose? matrix[i][j] : matrix[j][i]));
+        for (size_t j = 0; j < size + 1; j++) {
+            fprintf(stderr, "%lf ", matrix[i][j]);
         }
         fprintf(stderr, "\n");
     }
 }
 
 int gauss (double ** v, double * ans, size_t n) {
-    ptrdiff_t * where = malloc((n - 1) * sizeof(int));
-    size_t m = n - 1;
-    memset(where, -1, n -1);
-    memset(ans, 0, n);
+    ptrdiff_t * where = malloc((n) * sizeof(ptrdiff_t));
+    size_t m = n;
+    for (size_t i = 0; i < n; i++) {
+        where[i] = -1;
+        ans[i] = 0;
+    }
     for (size_t col = 0, row = 0; col < m && row < n; ++col) {
         size_t sel = row;
         for (size_t i = row; i < n; i++) {
@@ -74,16 +76,25 @@ int gauss (double ** v, double * ans, size_t n) {
         if (fabs(v[sel][col] < EPS))
             continue;
         for (size_t i = col; i <= m; i++) {
-            swap(&v[sel][i], &v[row][i]);
+            double t = v[sel][i];
+            v[sel][i] = v[row][i];
+            v[row][i] = t;
         }
         where[col] = row;
+
         for (size_t i = 0; i < n; i++)
             if (i != row) {
                 double c = v[i][col] / v[row][col];
                 for (size_t j = col; j <= m; j++)
                     v[i][j] -= v[row][j] * c;
             }
+        ++row;
+
     }
+//    for (size_t i = 0; i < n; i++) {
+//        fprintf(stderr, "%ld ", where[i]);
+//    }
+//    fprintf(stderr, "\n");
     for (size_t i = 0; i < m; i++)
         if (where[i] != -1)
             ans[i] = v[where[i]][m] / v[where[i]][i];
@@ -128,7 +139,7 @@ int main(int argc, char ** argv) {
     }
     double ** matrix = read_matrix(argv[1]);
     //fprintf(stderr, "Reading successful\n");
-    //print_matrix(matrix, 0, number);
+//    print_matrix(matrix, number);
     double * ans = malloc(number * sizeof(double));
     int result = gauss(matrix, ans, number);
 //    for (size_t i = 0; i < number; i++) {
