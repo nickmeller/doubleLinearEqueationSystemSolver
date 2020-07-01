@@ -3,7 +3,7 @@
 #include <math.h>
 #include <stddef.h>
 
-#define EPS 0.0000000001
+#define EPS 1.192092896e-07
 
 size_t number = -1;
 
@@ -67,11 +67,11 @@ int gauss (double ** v, double * ans, size_t n) {
     for (size_t col = 0, row = 0; col < m && row < n; ++col) {
         size_t sel = row;
         for (size_t i = row; i < n; i++) {
-            if (fabs(v[i][col] > fabs(v[sel][col]))) {
+            if (fabs(v[i][col]) > fabs(v[sel][col])) {
                 sel = i;
             }
         }
-        if (fabs(v[sel][col] < EPS))
+        if (fabs(v[sel][col]) < EPS)
             continue;
         for (size_t i = col; i <= m; i++) {
             double t = v[sel][i];
